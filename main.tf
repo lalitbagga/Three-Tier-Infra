@@ -154,3 +154,20 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
     cidr_ipv4       = "0.0.0.0/0" 
 }
 
+resource "aws_key_pair" "bastion_key" {
+  key_name   = "bastion-key"
+  public_key = file("~/.ssh/bastion-key.pub")
+}
+
+//Create ec2 instance for bastion host
+resource "aws_instance" "bastion_host" {
+  ami           = "ami-0278a2977150e13fc" // Amazon Linux 2 AMI 
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.main_subnet_public_1.id
+  vpc_security_group_ids = [aws_security_group.bastion_sg.id]
+  associate_public_ip_address = true
+  key_name = aws_key_pair.bastion_key.key_name
+    tags = {
+        Name = "bastion_host"
+    }
+}
