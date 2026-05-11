@@ -65,8 +65,21 @@ resource "aws_subnet" "main_subnet_private_2" {
 
 resource "aws_eip" "main_elastic_ip" {
     domain = "vpc"
-
+    depends_on = [ aws_internet_gateway.main_internet_gateway ]
     tags = {
         Name = "main_eip"
     }
+}
+
+resource "aws_nat_gateway" "main_nat_gateway" {
+  allocation_id = aws_eip.main_elastic_ip.id
+  subnet_id     = aws_subnet.main_subnet_public_2.id
+
+  tags = {
+    Name = "main_nat_gateway"
+  }
+
+  # To ensure proper ordering, it is recommended to add an explicit dependency
+  # on the Internet Gateway for the VPC.
+  depends_on = [aws_internet_gateway.main_internet_gateway]
 }
