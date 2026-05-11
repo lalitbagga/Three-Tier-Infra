@@ -169,3 +169,40 @@ resource "aws_instance" "bastion_host" {
         Name = "bastion_host"
     }
 }
+
+//Setup for private instance
+
+resource "aws_security_group" "private_sg" {
+  name = "private_sg"
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "private_sg"
+  }
+}
+
+//allow SSH access from the bastion host's security group
+resource "aws_vpc_security_group_ingress_rule" "private_sg_ingress" {
+    security_group_id = aws_security_group.private_sg.id
+    from_port         = 22
+    to_port           = 22
+    ip_protocol       = "tcp"
+    referenced_security_group_id = aws_security_group.bastion_sg.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "private_sg_egress" {
+    security_group_id = aws_security_group.private_sg.id
+    ip_protocol       = "-1"
+    cidr_ipv4       = "0.0.0.0/0"
+}
+resource "aws_instance" "private_host" {
+  ami           = "ami-0278a2977a50e13fc" // Amazon Linux 2 AMI 
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.main_subnet_private_1.id
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
+  associate_public_ip_address = false
+  key_name = aws_key_pair.bastion_key.key_name
+    tags = {
+        Name = "private_host"
+    }
+}
