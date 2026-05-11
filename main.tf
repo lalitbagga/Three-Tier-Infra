@@ -161,7 +161,7 @@ resource "aws_key_pair" "bastion_key" {
 
 //Create ec2 instance for bastion host
 resource "aws_instance" "bastion_host" {
-  ami           = "ami-0278a2977150e13fc" // Amazon Linux 2 AMI 
+  ami           = "ami-0278a2977a50e13fc" // Amazon Linux 2 AMI 
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.main_subnet_public_1.id
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
