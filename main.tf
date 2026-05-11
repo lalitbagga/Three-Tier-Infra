@@ -62,3 +62,11 @@ resource "aws_subnet" "main_subnet_private_2" {
       Name = "main_subnet_private_2"
     }
 }
+
+resource "aws_eip" "main_elastic_ip" {
+    domain = "vpc"
+
+    tags = {
+        Name = "main_eip"
+    }
+}
