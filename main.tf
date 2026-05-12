@@ -3,10 +3,13 @@ terraform {
     aws = {
       source  = "hashicorp/aws"
       version = "~> 5.92"
-    }
+    }   
   }
 
   required_version = ">= 1.2"
+}
+provider "aws" {
+  region = "us-east-2"
 }
 
 
@@ -61,6 +64,24 @@ resource "aws_subnet" "main_subnet_private_2" {
     tags = {
       Name = "main_subnet_private_2"
     }
+}
+resource "aws_subnet" "db_subnet_1" {
+  vpc_id = aws_vpc.main.id
+  cidr_block = "10.0.5.0/24"
+  availability_zone = "us-east-2a"
+
+  tags = {
+    Name = "db_subnet_1"
+  }
+}
+
+resource "aws_subnet" "db_subnet_2" {
+  vpc_id = aws_vpc.main.id
+  cidr_block = "10.0.6.0/24"
+  availability_zone = "us-east-2b"
+  tags = {
+    Name = "db_subnet_2"
+  }
 }
 
 resource "aws_eip" "main_elastic_ip" {
@@ -204,5 +225,57 @@ resource "aws_instance" "private_host" {
   key_name = aws_key_pair.bastion_key.key_name
     tags = {
         Name = "private_host"
+    }
+}
+
+//DB setup
+
+resource "aws_security_group" "db_sg" {
+    name = "db_sg"
+    vpc_id = aws_vpc.main.id
+    
+    tags = {
+        Name = "db_sg"
+    }
+}
+
+//allow MySQL access from the private host's security group
+resource "aws_vpc_security_group_ingress_rule" "db_sg_ingress" {
+    security_group_id = aws_security_group.db_sg.id
+    from_port         = 3306
+    to_port           = 3306
+    ip_protocol       = "tcp"
+    referenced_security_group_id = aws_security_group.private_sg.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "db_sg_egress" {
+    security_group_id = aws_security_group.db_sg.id
+    ip_protocol       = "-1"
+    cidr_ipv4       = "0.0.0.0/0"
+}
+
+resource "aws_db_subnet_group" "db_group" {
+    name = "db_subnet_group"
+    subnet_ids = [aws_subnet.db_subnet_1.id, aws_subnet.db_subnet_2.id]
+    
+    tags = {
+        Name = "db_subnet_group"
+    }
+}
+
+resource "aws_db_instance" "default" {
+  allocated_storage    = 10
+  db_name              = "mydb"
+  engine               = "mysql"
+  engine_version       = "8.0"
+  instance_class       = "db.t3.micro"
+  username             = "admin"
+  password             = "Admin1234!"
+  db_subnet_group_name = aws_db_subnet_group.db_group.name
+  vpc_security_group_ids = [aws_security_group.db_sg.id]
+  skip_final_snapshot  = true
+
+     tags = {
+        Name = "db_private" 
     }
 }
