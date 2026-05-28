@@ -333,17 +333,17 @@ resource "aws_iam_instance_profile" "ec2_instance_profile" {
 
 //store the config in SSM:
 resource "aws_ssm_parameter" "cloudwatch_config" {
-  name  = "/cloudwatch-agent/config"
-  type  = "String"
+  name = "/cloudwatch-agent/config"
+  type = "String"
   value = jsonencode({
     logs = {
       logs_collected = {
         files = {
           collect_list = [
             {
-              file_path        = "/var/log/messages"
-              log_group_name   = "ec2-logs"
-              log_stream_name  = "{instance_id}"
+              file_path       = "/var/log/messages"
+              log_group_name  = "ec2-logs"
+              log_stream_name = "{instance_id}"
             }
           ]
         }
