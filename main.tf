@@ -1,33 +1,15 @@
 locals {
   cloudwatch_user_data = <<-EOF
-              #!/bin/bash
+    #!/bin/bash
 
-              yum update -y
-              yum install -y amazon-cloudwatch-agent
+    yum update -y
+    yum install -y amazon-cloudwatch-agent
 
-              cat <<CONFIG > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-              {
-                "logs": {
-                  "logs_collected": {
-                    "files": {
-                      "collect_list": [
-                        {
-                          "file_path": "/var/log/messages",
-                          "log_group_name": "ec2-logs",
-                          "log_stream_name": "{instance_id}"
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-              CONFIG
-
-              /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-                -a fetch-config -m ec2 \
-                -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json \
-                -s
-              EOF
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+      -a fetch-config -m ec2 \
+      -c ssm:/cloudwatch-agent/config \
+      -s
+  EOF
 }
 
 terraform {
@@ -196,7 +178,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"
-  cidr_ipv4         = "174.114.52.173/32"
+  cidr_ipv4         = "174.114.38.31/32"
 }
 
 resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
@@ -347,4 +329,30 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_attach" {
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
   name = "ec2_instance_profile"
   role = aws_iam_role.ec2_role.name
+}
+
+//store the config in SSM:
+resource "aws_ssm_parameter" "cloudwatch_config" {
+  name  = "/cloudwatch-agent/config"
+  type  = "String"
+  value = jsonencode({
+    logs = {
+      logs_collected = {
+        files = {
+          collect_list = [
+            {
+              file_path        = "/var/log/messages"
+              log_group_name   = "ec2-logs"
+              log_stream_name  = "{instance_id}"
+            }
+          ]
+        }
+      }
+    }
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_attach" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
