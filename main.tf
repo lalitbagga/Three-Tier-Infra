@@ -19,11 +19,17 @@ terraform {
       version = "~> 5.92"
     }
   }
+  backend "s3" {
+    bucket =  "three-tier-tf-state-us-east-2"
+    key    = "three-tier/terraform.tfstate"
+    region = "us-east-2"
+    use_lockfile = true
+  }
 
   required_version = ">= 1.2"
 }
 provider "aws" {
-  region = "us-east-2"
+  region = var.aws_region
 }
 
 
