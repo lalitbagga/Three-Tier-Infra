@@ -36,27 +36,11 @@ module "networking" {
   source = "./module/networking"
 }
 
-resource "aws_security_group" "bastion_sg" {
-  name   = "bastion_sg"
+module "security" {
+  source = "./module/security"
   vpc_id = module.networking.vpc_id
-
-  tags = {
-    Name = "bastion_sg"
-  }
-}
-resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
-  security_group_id = aws_security_group.bastion_sg.id
-  from_port         = 22
-  to_port           = 22
-  ip_protocol       = "tcp"
-  cidr_ipv4         = "174.114.38.31/32"
 }
 
-resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
-  security_group_id = aws_security_group.bastion_sg.id
-  ip_protocol       = "-1"
-  cidr_ipv4         = "0.0.0.0/0"
-}
 
 resource "aws_key_pair" "bastion_key" {
   key_name   = "bastion-key"
@@ -68,7 +52,7 @@ resource "aws_instance" "bastion_host" {
   ami                         = "ami-0278a2977a50e13fc" // Amazon Linux 2 AMI 
   instance_type               = "t3.micro"
   subnet_id                   = module.networking.main_subnet_public_1_id
-  vpc_security_group_ids      = [aws_security_group.bastion_sg.id]
+  vpc_security_group_ids      = [module.security.bastion_sg_id]
   associate_public_ip_address = true
   key_name                    = aws_key_pair.bastion_key.key_name
   tags = {
@@ -97,7 +81,7 @@ resource "aws_vpc_security_group_ingress_rule" "private_sg_ingress" {
   from_port                    = 22
   to_port                      = 22
   ip_protocol                  = "tcp"
-  referenced_security_group_id = aws_security_group.bastion_sg.id
+  referenced_security_group_id = module.security.bastion_sg_id
 }
 
 resource "aws_vpc_security_group_egress_rule" "private_sg_egress" {
