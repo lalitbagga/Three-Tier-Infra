@@ -39,6 +39,8 @@ module "networking" {
 module "security" {
   source = "./module/security"
   vpc_id = module.networking.vpc_id
+  db_subnet_1_id = module.networking.db_subnet_1_id
+  db_subnet_2_id = module.networking.db_subnet_2_id
 }
 
 
@@ -66,34 +68,12 @@ resource "aws_instance" "bastion_host" {
 
 //Setup for private instance
 
-resource "aws_security_group" "private_sg" {
-  name   = "private_sg"
-  vpc_id = module.networking.vpc_id
 
-  tags = {
-    Name = "private_sg"
-  }
-}
-
-//allow SSH access from the bastion host's security group
-resource "aws_vpc_security_group_ingress_rule" "private_sg_ingress" {
-  security_group_id            = aws_security_group.private_sg.id
-  from_port                    = 22
-  to_port                      = 22
-  ip_protocol                  = "tcp"
-  referenced_security_group_id = module.security.bastion_sg_id
-}
-
-resource "aws_vpc_security_group_egress_rule" "private_sg_egress" {
-  security_group_id = aws_security_group.private_sg.id
-  ip_protocol       = "-1"
-  cidr_ipv4         = "0.0.0.0/0"
-}
 resource "aws_instance" "private_host" {
   ami                         = "ami-0278a2977a50e13fc" // Amazon Linux 2 AMI 
   instance_type               = "t3.micro"
   subnet_id                   = module.networking.main_subnet_private_1_id
-  vpc_security_group_ids      = [aws_security_group.private_sg.id]
+  vpc_security_group_ids      = [module.security.private_sg_id]
   associate_public_ip_address = false
   key_name                    = aws_key_pair.bastion_key.key_name
   tags = {
@@ -103,38 +83,9 @@ resource "aws_instance" "private_host" {
 
 //DB setup
 
-resource "aws_security_group" "db_sg" {
-  name   = "db_sg"
-  vpc_id = module.networking.vpc_id
 
-  tags = {
-    Name = "db_sg"
-  }
-}
 
-//allow MySQL access from the private host's security group
-resource "aws_vpc_security_group_ingress_rule" "db_sg_ingress" {
-  security_group_id            = aws_security_group.db_sg.id
-  from_port                    = 3306
-  to_port                      = 3306
-  ip_protocol                  = "tcp"
-  referenced_security_group_id = aws_security_group.private_sg.id
-}
 
-resource "aws_vpc_security_group_egress_rule" "db_sg_egress" {
-  security_group_id = aws_security_group.db_sg.id
-  ip_protocol       = "-1"
-  cidr_ipv4         = "0.0.0.0/0"
-}
-
-resource "aws_db_subnet_group" "db_group" {
-  name       = "db_subnet_group"
-  subnet_ids = [module.networking.db_subnet_1_id, module.networking.db_subnet_2_id]
-
-  tags = {
-    Name = "db_subnet_group"
-  }
-}
 
 resource "aws_db_instance" "default" {
   allocated_storage      = 10
@@ -144,8 +95,8 @@ resource "aws_db_instance" "default" {
   instance_class         = "db.t3.micro"
   username               = "admin"
   password               = "Admin1234!"
-  db_subnet_group_name   = aws_db_subnet_group.db_group.name
-  vpc_security_group_ids = [aws_security_group.db_sg.id]
+  db_subnet_group_name   = module.security.db_subnet_group_name
+  vpc_security_group_ids = [module.security.db_sg_id]
   skip_final_snapshot    = true
 
   tags = {

@@ -19,3 +19,60 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_outbound" {
   ip_protocol       = "-1"
   cidr_ipv4         = "0.0.0.0/0"
 }
+
+resource "aws_security_group" "private_sg" {
+  name   = "private_sg"
+  vpc_id = var.vpc_id
+
+  tags = {
+    Name = "private_sg"
+  }
+}
+
+resource "aws_security_group" "db_sg" {
+  name   = "db_sg"
+  vpc_id = var.vpc_id
+
+  tags = {
+    Name = "db_sg"
+  }
+}
+
+//allow SSH access from the bastion host's security group
+resource "aws_vpc_security_group_ingress_rule" "private_sg_ingress" {
+  security_group_id            = aws_security_group.private_sg.id
+  from_port                    = 22
+  to_port                      = 22
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.bastion_sg.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "private_sg_egress" {
+  security_group_id = aws_security_group.private_sg.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+}
+
+//allow MySQL access from the private host's security group
+resource "aws_vpc_security_group_ingress_rule" "db_sg_ingress" {
+  security_group_id            = aws_security_group.db_sg.id
+  from_port                    = 3306
+  to_port                      = 3306
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = aws_security_group.private_sg.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "db_sg_egress" {
+  security_group_id = aws_security_group.db_sg.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+}
+
+resource "aws_db_subnet_group" "db_group" {
+  name       = "db_subnet_group"
+  subnet_ids = [var.db_subnet_1_id, var.db_subnet_2_id]
+
+  tags = {
+    Name = "db_subnet_group"
+  }
+}
