@@ -82,11 +82,6 @@ resource "aws_instance" "private_host" {
 }
 
 //DB setup
-
-
-
-
-
 resource "aws_db_instance" "default" {
   allocated_storage      = 10
   db_name                = "mydb"
