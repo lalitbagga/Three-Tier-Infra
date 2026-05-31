@@ -25,6 +25,11 @@ module "networking" {
 module "security" {
   source = "./module/security"
   vpc_id = module.networking.vpc_id
+
+}
+module "database" {
+  source = "./module/database"
+  db_sg_id = module.security.db_sg_id
   db_subnet_1_id = module.networking.db_subnet_1_id
   db_subnet_2_id = module.networking.db_subnet_2_id
 }

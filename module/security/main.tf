@@ -68,11 +68,3 @@ resource "aws_vpc_security_group_egress_rule" "db_sg_egress" {
   cidr_ipv4         = "0.0.0.0/0"
 }
 
-resource "aws_db_subnet_group" "db_group" {
-  name       = "db_subnet_group"
-  subnet_ids = [var.db_subnet_1_id, var.db_subnet_2_id]
-
-  tags = {
-    Name = "db_subnet_group"
-  }
-}
