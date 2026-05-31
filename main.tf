@@ -36,21 +36,3 @@ module "compute" {
   main_subnet_private_1_id = module.networking.main_subnet_private_1_id
   private_sg_id = module.security.private_sg_id
 }
-
-//DB setup
-resource "aws_db_instance" "default" {
-  allocated_storage      = 10
-  db_name                = "mydb"
-  engine                 = "mysql"
-  engine_version         = "8.0"
-  instance_class         = "db.t3.micro"
-  username               = "admin"
-  password               = "Admin1234!"
-  db_subnet_group_name   = module.security.db_subnet_group_name
-  vpc_security_group_ids = [module.security.db_sg_id]
-  skip_final_snapshot    = true
-
-  tags = {
-    Name = "db_private"
-  }
-}
