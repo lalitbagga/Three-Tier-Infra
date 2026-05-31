@@ -6,9 +6,9 @@ terraform {
     }
   }
   backend "s3" {
-    bucket =  "three-tier-tf-state-us-east-2"
-    key    = "three-tier/terraform.tfstate"
-    region = "us-east-2"
+    bucket       = "three-tier-tf-state-us-east-2"
+    key          = "three-tier/terraform.tfstate"
+    region       = "us-east-2"
     use_lockfile = true
   }
 
@@ -28,16 +28,16 @@ module "security" {
 
 }
 module "database" {
-  source = "./module/database"
-  db_sg_id = module.security.db_sg_id
+  source         = "./module/database"
+  db_sg_id       = module.security.db_sg_id
   db_subnet_1_id = module.networking.db_subnet_1_id
   db_subnet_2_id = module.networking.db_subnet_2_id
 }
 
 module "compute" {
-  source = "./module/compute"
-  main_subnet_public_1_id = module.networking.main_subnet_public_1_id
-  bastion_sg_id = module.security.bastion_sg_id
+  source                   = "./module/compute"
+  main_subnet_public_1_id  = module.networking.main_subnet_public_1_id
+  bastion_sg_id            = module.security.bastion_sg_id
   main_subnet_private_1_id = module.networking.main_subnet_private_1_id
-  private_sg_id = module.security.private_sg_id
+  private_sg_id            = module.security.private_sg_id
 }
