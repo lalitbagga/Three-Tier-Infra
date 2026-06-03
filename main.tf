@@ -41,3 +41,13 @@ module "compute" {
   main_subnet_private_1_id = module.networking.main_subnet_private_1_id
   private_sg_id            = module.security.private_sg_id
 }
+module "ecr" {
+  source = "./module/ecr"
+}
+
+module "ecs" {
+  source             = "./module/ecs"
+  private_subnet_id  = module.networking.main_subnet_private_1_id
+  ecs_sg_id          = module.security.ecs_sg_id
+  ecr_repository_url = module.ecr.repository_url
+}
