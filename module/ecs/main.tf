@@ -87,6 +87,14 @@ resource "aws_ecs_service" "app" {
     security_groups  = [var.ecs_sg_id]
     assign_public_ip = false
   }
+
+  load_balancer {
+    target_group_arn = var.target_group_arn
+    container_name   = "app-container"
+    container_port   = 3000
+  }
+
+  depends_on = [var.alb_listener_arn]
 }
 
 resource "aws_cloudwatch_log_group" "ecs_logs" {

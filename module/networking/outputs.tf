@@ -18,3 +18,7 @@ output "db_subnet_1_id" {
 output "db_subnet_2_id" {
   value = aws_subnet.db_subnet_2.id
 }
+
+output "main_subnet_public_2_id" {
+  value = aws_subnet.main_subnet_public_2.id
+}

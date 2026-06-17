@@ -50,4 +50,14 @@ module "ecs" {
   private_subnet_id  = module.networking.main_subnet_private_1_id
   ecs_sg_id          = module.security.ecs_sg_id
   ecr_repository_url = module.ecr.repository_url
+  target_group_arn   = module.alb.target_group_arn
+  alb_listener_arn   = module.alb.alb_listener_arn
+}
+
+module "alb" {
+  source              = "./module/alb"
+  vpc_id              = module.networking.vpc_id
+  alb_sg_id          = module.security.alb_sg_id
+  public_subnet_1_id = module.networking.main_subnet_public_1_id
+  public_subnet_2_id = module.networking.main_subnet_public_2_id
 }
