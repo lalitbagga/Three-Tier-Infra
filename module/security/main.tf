@@ -113,3 +113,36 @@ resource "aws_vpc_security_group_egress_rule" "alb_sg_egress" {
   cidr_ipv4         = "0.0.0.0/0"
 }
 
+resource "aws_security_group" "monitoring_sg" {
+  name   = "monitoring_sg"
+  vpc_id = var.vpc_id
+
+  tags = {
+    Name = "monitoring_sg"
+  }
+}
+
+# Grafana - public
+resource "aws_vpc_security_group_ingress_rule" "grafana_ingress" {
+  security_group_id = aws_security_group.monitoring_sg.id
+  from_port         = 3000
+  to_port           = 3000
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+}
+
+# SSH - your IP only
+resource "aws_vpc_security_group_ingress_rule" "monitoring_ssh" {
+  security_group_id = aws_security_group.monitoring_sg.id
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "174.114.38.31/32"
+}
+
+# Outbound
+resource "aws_vpc_security_group_egress_rule" "monitoring_egress" {
+  security_group_id = aws_security_group.monitoring_sg.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+}

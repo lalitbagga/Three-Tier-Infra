@@ -17,3 +17,11 @@ variable "private_sg_id" {
   description = "ID of the security group for the private host"
   type        = string
 }
+
+variable "monitoring_sg_id" {
+  type = string
+}
+
+variable "alb_dns_name" {
+  type = string
+}

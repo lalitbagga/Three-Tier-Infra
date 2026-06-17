@@ -40,6 +40,8 @@ module "compute" {
   bastion_sg_id            = module.security.bastion_sg_id
   main_subnet_private_1_id = module.networking.main_subnet_private_1_id
   private_sg_id            = module.security.private_sg_id
+  monitoring_sg_id          = module.security.monitoring_sg_id
+  alb_dns_name              = module.alb.alb_dns_name
 }
 module "ecr" {
   source = "./module/ecr"
