@@ -1,3 +1,7 @@
+data "aws_ssm_parameter" "bastion_key" {
+  name = "/threeTier/bastionKeyPublic"
+}
+
 locals {
   cloudwatch_user_data = <<-EOF
     #!/bin/bash
@@ -74,7 +78,7 @@ resource "aws_iam_instance_profile" "ec2_instance_profile" {
 
 resource "aws_key_pair" "bastion_key" {
   key_name   = "bastion-key"
-  public_key = file("~/.ssh/bastion-key.pub")
+  public_key = data.aws_ssm_parameter.bastion_key.value
 }
 
 //Create ec2 instance for bastion host
